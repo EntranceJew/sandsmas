@@ -133,18 +133,15 @@ function projector:draw()
 	love.graphics.push("all")
 	love.graphics.translate(self.x, self.y)
 	love.graphics.scale(self.sx, self.sy)
-	
 	self.env.love.draw()
 	
 	love.graphics.pop()
 end
 
 function projector:update(dt)
-	print('brongus')
 	if self.active then
 		self.gt = self.gt + dt
 		self.dt = dt
-		print('emulating step', dt)
 		self.env.love.update(dt)
 	end
 	self.tt = self.tt + dt

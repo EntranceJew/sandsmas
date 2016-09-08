@@ -974,7 +974,6 @@ function love.load()
 end
 
 function love.update(dt)
-	print('benis')
 	dt = math.min(dt, 1/10)
 	g_entities.toast:update(dt)
 	g_entities.mosaic:update(dt)

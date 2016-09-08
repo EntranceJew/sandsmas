@@ -1,5 +1,6 @@
-require "imgui"
-local projector = require("projector")
+local imgui = require("imgui")
+local UIHelper = require("src.classes.UIHelper")()
+local projector = require("libs.projector")
 local nogame
 
 --
@@ -7,73 +8,14 @@ local nogame
 --
 
 function love.load(arg)
-    nogame = projector:new("nogame.lua")
+    nogame = projector:new("project/main.lua")
 end
 
 function love.update(dt)
-    print('bonus')
     imgui.NewFrame()
     nogame:update(dt)
 end
 
-local capture = {}
-local function CaptureWindowDims()
-    local x, y = imgui.GetWindowPos()
-    local w, h = imgui.GetWindowSize()
-    capture = {
-        x = x,
-        y = y,
-        w = w,
-        h = h
-    }
-    if x or y or w or h then
-        return capture
-    else
-        capture = nil
-        return
-    end
-end
-local function CaptureWidgetDims()
-    local x, y = imgui.GetItemRectMin()
-    local w, h = imgui.GetItemRectMax()
-    w = w - x
-    h = h - y
-    capture = {
-        x = x,
-        y = y,
-        w = w,
-        h = h
-    }
-    if x or y or w or h then
-        return capture
-    else
-        capture = nil
-        return
-    end
-end
-local sceneCap
-local gameCap
-
-local maxdocks
-local docks = 1
-function daink(bug, name)
-    local lies = "dock_" .. docks
-    if bug ~= nil then
-        lies = lies .. "_" .. bug
-        imgui.SetNextDock(bug);
-    end
-    
-    if name ~= nil then
-        lies = name
-    end
-    
-    if imgui.BeginDock(lies) then
-        imgui.Text(lies);
-    end
-    imgui.EndDock();
-    
-    docks = docks + 1
-end
 function love.draw()
     local wx, wy, x, y
     if imgui.BeginMainMenuBar() then
@@ -114,64 +56,64 @@ function love.draw()
     imgui.SetNextWindowPos(0, 0)
     imgui.SetNextWindowSize(love.graphics.getWidth(), love.graphics.getHeight())
     
-    if imgui.Begin("DockArea", nil, { "NoResize", "NoMove", "NoBringToFrontOnFocus" }) then
+    if UIHelper:Begin("DockArea", nil, { "NoResize", "NoMove", "NoBringToFrontOnFocus" }) then
         imgui.BeginDockspace()
-            imgui.SetNextDock("Right");
+            imgui.SetNextDock("Right")
             
             if imgui.BeginDock("Inspector") then
-                imgui.Text("Inspector");
+                imgui.Text("Inspector")
             end
-            imgui.EndDock();
+            imgui.EndDock()
             
-            imgui.SetNextDock("Left");
+            imgui.SetNextDock("Left")
             
             if imgui.BeginDock("Project") then
-                imgui.Text("Project");
+                imgui.Text("Project")
             end
-            imgui.EndDock();
+            imgui.EndDock()
             if imgui.BeginDock("Console") then
-                imgui.Text("Console");
+                imgui.Text("Console")
             end
-            imgui.EndDock();
+            imgui.EndDock()
             
-            imgui.SetNextDock("Top");
+            imgui.SetNextDock("Top")
             
             if imgui.BeginDock("Hierarchy") then
-                imgui.Text("Hierarchy");
+                imgui.Text("Hierarchy")
             end
-            imgui.EndDock();
+            imgui.EndDock()
             
-            imgui.SetNextDock("Right");
+            imgui.SetNextDock("Right")
             
             if imgui.BeginDock("Scene") then
-                imgui.Text("Scene");
+                imgui.Text("Scene")
             end
-            imgui.EndDock();
+            imgui.EndDock()
+            
             if imgui.BeginDock("Game") then
-                CaptureWindowDims()
-                --print(capture.x, capture.y, capture.w, capture.h)
-                imgui.Text("Game");
+                local x, y = imgui.GetWindowPos()
+                local w, h = imgui.GetWindowSize()
+                UIHelper:PushPostRender(function()
+                    nogame:setPos(x, y)
+                    nogame:resize(w/love.graphics.getWidth(), h/love.graphics.getHeight())
+                    nogame:draw()
+                end)
+                imgui.Text("Game")
             end
-            imgui.EndDock();
+            imgui.EndDock()
+            
         imgui.EndDockspace()
     end
-    imgui.End()
+    UIHelper:End()
 
     love.graphics.clear(100, 100, 100, 255)
-    imgui.Render();
+    imgui.Render()
     
-    if capture then
-        print(capture.x, capture.y, capture.w, capture.h)
-        nogame:setPos(capture.x, capture.y)
-        nogame:resize(capture.w/love.graphics.getWidth(), capture.h/love.graphics.getHeight())
-        nogame:draw()
-        
-        capture = nil
-    end
+    UIHelper:PostRender()
 end
 
 function love.quit()
-    imgui.ShutDown();
+    imgui.ShutDown()
 end
 
 --
