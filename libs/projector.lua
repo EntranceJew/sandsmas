@@ -3,6 +3,18 @@
 	very good thanks EntranceJew
 	MIT license probably.
 ]]
+--[[
+	things to think about:
+	* l.graphics does not thread nicely so we can't utilize this for sandboxing a render
+	* stuff like l.k.isDown bounce reads right off SDL and don't matter to us
+]]
+--[[
+	@TODO:
+	* because we pass through a clone of love, things like love.keyboard.isDown
+		read from the editor's LOVE despite sandboxed love.keypressed.* events 
+		not being run.
+	* makes u think
+]]
 
 local projector = {}
 projector.__index = projector
@@ -22,87 +34,66 @@ local function new(self, entry, x, y, sx, sy)
 	return t
 end
 
-local function soft_load_core(entry)
-	local env = setmetatable(
-		{
-			pairs = pairs,
-			table = table,
-			ipairs = ipairs,
-			print = print,
-			love = clone(love),
-			require = require,
-			setmetatable = setmetatable,
-			tostring = tostring,
-			assert = assert,
-			type = type,
-			math = math
-		},
-		{
-		}
-	)
-	assert(pcall(setfenv(assert(love.filesystem.load(entry)), env)))
-	setmetatable(env, nil)
-	return env
-end
-
-local ScriptEnvironment = {
-	pairs = pairs,
-	table = table,
-	ipairs = ipairs,
-	print = print,
-	love = clone(love),
-	require = require,
-	setmetatable = setmetatable,
-	tostring = tostring,
-	assert = assert,
-	type = type,
-	math = math
-}
-local function LoadScript(filename)
-	local chunk = loadfile(filename)
-	setfenv(chunk, ScriptEnvironment)
-	chunk()
-end
-
-local function load_core(emu)
-	-- prepare our environment
-	--local env = {exlove = love, pcall = pcall, print = print, tostring = tostring, require = require}
-	--setmetatable(env, {__index = _G})
-	--setfenv(1, env)
-	
-	local env = {
+local function honk_load_core(entry)
+	-- create new environment
+	local env = { 
 		love = clone(love)
 	}
+	local metaenv = {
+		-- pass-through
+		__index = function(t, i)
+			--if i ~= 'love' then
+				return rawget(_G, i)
+			--else
+			--	assert(false, 'We wanted love but I do not know if that is our love or their love.')
+			--end
+		end,
+	}
+	setmetatable(env, metaenv)
 	
-	-- TODO: pcall this, make safe
-	if love.filesystem.isFile(emu) then
-		local result
-		local ok, chunk = pcall( love.filesystem.load, emu )
-		if not ok then
-			print('The following error happend: ' .. tostring(chunk))
-		else
-			setfenv(chunk, env)
-			ok, result = pcall(chunk) -- execute the chunk safely
-			
-			if not ok then -- will be false if there is an error
-				print('The following error happened: ' .. tostring(result))
-			else
-				return result
-			end
-		end
-	end
-	return env
+	-- load the chunk
+	local ok, chunk = pcall( love.filesystem.load, entry )
+	assert(ok, "The entry point '" .. entry .. "' appears invalid.")
+	
+	-- apply the environment to the chunk
+	setfenv(chunk, env)
+	
+	-- invoke the chunk
+	local result
+	ok, result = pcall( chunk )
+	assert(ok, "Chunk execution failed for entry point '" .. entry .. "', error: " .. tostring(result) )
+	
+	-- we have now captured 'entry' inside 'env'
+	-- we have not entered the loaded environment
+	return env, metaenv
 end
 
-function projector:initialize(entry, x, y, sx, sy)
+function projector:getBaseFromEntryPoint(entry)
+	local ret = {string.match(entry, "(.-)([^\\/]-%.?([^%.\\/]*))$")}
+	return ret[1]
+end
+
+function projector:initialize(entry, x, y, w, h)
 	-- set the entry point for our emulation
 	self.entry  = entry or 'main.lua'
+	
+	-- emulate path level imports and hope to god we don't get a collision
+	self.base_path = self:getBaseFromEntryPoint(self.entry)
+	
+	if self.base_path ~= '' then
+		print('declared base path', self.base_path)
+		self.added_path = ';' .. self.base_path .. '?.lua;' .. self.base_path .. '?/init.lua'
+		love.filesystem.setRequirePath(love.filesystem.getRequirePath() .. self.added_path)
+	else
+		print('fug')
+	end
+	
 	-- set where the emulation should draw
 	self.x      = x or 0
 	self.y      = y or 0
 	-- set how large the emulation should be
-	self.sx  = sx or 1
-	self.sy = sy or 1
+	self.w = w or love.graphics.getWidth()
+	self.h = h or love.graphics.getHeight()
 	
 	-- timers for play / focus emulation
 	self.dt = 0
@@ -110,31 +101,80 @@ function projector:initialize(entry, x, y, sx, sy)
 	self.tt = 0
 	self.active = true
 	
+	-- preserve reality as it was before we messed with things
+	-- the "absolutely safe capsule" for package, etc.
+	self.asc = getfenv()
+	
 	-- load our core
-	self.env = soft_load_core(self.entry)
+	self.env = honk_load_core(self.entry)
 	self.env.love.load()
 end
+
+function projector:enterEnvironment()
+	
+end
+
+function projector:renderAbsolutelySafeCapsule()
+	self.asc = {
+		package = {
+			cpath = package.cpath,
+			loaded = package.loaded,
+			loadlib = package.loadlib,
+			path = package.path,
+			preload = package.preload,
+			searchers = package.searchers,
+			searchpath = package.searchpath
+		},
+	}
+end
+
+--[[
+	cpath = package.cpath,
+	loaded = {}, -- blanking
+	loadlib = package.loadlib,
+	path = package.path,
+	preload = {},
+	searchers = {},
+	searchpath = package.searchpath
+]]
 
 function projector:setPos(x, y)
 	self.x = x or self.x
 	self.y = y or self.y
 end
 
-function projector:resize(sx, sy)
-	if self.sx ~= sx or self.sy ~= sy then
-		self.sx = sx or self.sx
-		self.sy = sy or self.sy
+function projector:resize(w, h)
+	if self.w ~= w or self.h ~= h then
+		self.w = w or self.w
+		self.h = h or self.h
 		
-		self.env.love.resize(sx, sy)
+		if self.env.love.resize then
+			self:doInEnv(self.env.love.resize, self.w, self.h)
+		end
 	end
+end
+
+function projector:doInEnv(func, ...)
+	-- have some variables set in our scope before entering env
+	local ok, result
+	local pcall = pcall
+	
+	-- enter the env, execute, immediately leave
+	setfenv(1, self.env)
+	ok, result = pcall( func, ... )
+	setfenv(1, self.asc)
+	
+	-- we're done here
+	return ok, result
 end
 
 function projector:draw()
 	love.graphics.push("all")
 	love.graphics.translate(self.x, self.y)
-	love.graphics.scale(self.sx, self.sy)
-	self.env.love.draw()
-	
+	love.graphics.scale(self.w/love.graphics.getWidth(), self.h/love.graphics.getHeight())
+	love.graphics.setScissor(self.x, self.y, self.w, self.h)
+	self:doInEnv(self.env.love.draw)
+	--love.graphics.setScissor()
 	love.graphics.pop()
 end
 
@@ -142,9 +182,15 @@ function projector:update(dt)
 	if self.active then
 		self.gt = self.gt + dt
 		self.dt = dt
-		self.env.love.update(dt)
+		self:doInEnv(self.env.love.update, dt)
 	end
 	self.tt = self.tt + dt
+end
+
+function projector:keypressed(key, scan)
+	if self.env.love.keypressed then
+		self:doInEnv(self.env.love.keypressed)
+	end
 end
 
 return setmetatable({new=new}, {__call=function(_,...) return new(...) end})
