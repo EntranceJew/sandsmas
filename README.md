@@ -1,6 +1,8 @@
 # sandsmas
 A visual editor for LÖVE, that runs in LÖVE.
 
+![example screenshot](http://i.imgur.com/SCWmBTm.png)
+
 # Structure
 The basic structure is that there is, from least complex to most complex:
 * **Underlying Libraries** specifically chosen because they do what they do the best.
