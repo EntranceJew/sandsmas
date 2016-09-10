@@ -15,6 +15,7 @@
 		not being run.
 	* makes u think
 ]]
+local lume = require("libs.lume.lume")
 
 local projector = {}
 projector.__index = projector
@@ -28,28 +29,31 @@ local function clone(t)
 	return rtn
 end
 
-local function new(self, entry, x, y, sx, sy)
+local function new(self, entry, exposed, x, y, sx, sy)
 	local t = setmetatable({}, projector)
-	t:initialize(entry, x, y, sx, sy)
+	t:initialize(entry, exposed, x, y, sx, sy)
 	return t
 end
 
-local function honk_load_core(entry)
+function projector:load_core(entry, exposed)
 	-- create new environment
 	local env = { 
 		love = clone(love)
 	}
-	local metaenv = {
-		-- pass-through
-		__index = function(t, i)
-			--if i ~= 'love' then
-				return rawget(_G, i)
-			--else
-			--	assert(false, 'We wanted love but I do not know if that is our love or their love.')
-			--end
-		end,
-	}
+	
+	-- merge an external environment
+	if exposed and type(exposed) == "table" then
+		env = lume.merge(env, exposed)
+	end
+	
+	local metaenv = { __index = _G }
 	setmetatable(env, metaenv)
+	
+	-- put it on us
+	self.env = env
+	
+	-- hook to set the environment before executing any sort of code in it
+	self:loveEncapsulate()
 	
 	-- load the chunk
 	local ok, chunk = pcall( love.filesystem.load, entry )
@@ -68,12 +72,73 @@ local function honk_load_core(entry)
 	return env, metaenv
 end
 
+function projector:loadstringInEnv(str)
+	local ok, chunk = pcall( loadstring, str )
+	assert(ok, "The chunk was messed up: " .. tostring(chunk) )
+	
+	setfenv( chunk, self.env )
+	
+	local result
+	ok, result = pcall( chunk )
+	assert(ok, "Chunk execution failed: " .. tostring(result) )
+	
+	return result
+end
+
+-- search and destroy: https://love2d.org/wiki/Category:Callbacks
+function projector:loveEncapsulate()
+	-- maybe_scopes: nogame, conf
+	
+	local bomb = [[
+	local scopes = {
+		'directorydropped',
+		'draw',
+		'errhand',
+		'filedropped',
+		'focus',
+		'gamepadaxis',
+		'gamepadpressed',
+		'gamepadreleased',
+		'joystickadded',
+		'joystickaxis',
+		'joystickhat',
+		'joystickpressed',
+		'joystickreleased',
+		'joystickremoved',
+		'keypressed',
+		'keyreleased',
+		'load',
+		'lowmemory',
+		'mousefocus',
+		'mousemoved',
+		'mousepressed',
+		'mousereleased',
+		'quit',
+		'resize',
+		'run',
+		'textedited',
+		'textinput',
+		'threaderror',
+		'touchmoved',
+		'touchpressed',
+		'touchreleased',
+		'update',
+		'visible',
+		'wheelmoved'
+	}
+	for k,v in ipairs(scopes) do
+		love[v] = nil
+	end
+	]]
+	return self:loadstringInEnv(bomb)
+end
+
 function projector:getBaseFromEntryPoint(entry)
 	local ret = {string.match(entry, "(.-)([^\\/]-%.?([^%.\\/]*))$")}
 	return ret[1]
 end
 
-function projector:initialize(entry, x, y, w, h)
+function projector:initialize(entry, exposed, x, y, w, h)
 	-- set the entry point for our emulation
 	self.entry  = entry or 'main.lua'
 	
@@ -81,11 +146,10 @@ function projector:initialize(entry, x, y, w, h)
 	self.base_path = self:getBaseFromEntryPoint(self.entry)
 	
 	if self.base_path ~= '' then
-		print('declared base path', self.base_path)
 		self.added_path = ';' .. self.base_path .. '?.lua;' .. self.base_path .. '?/init.lua'
 		love.filesystem.setRequirePath(love.filesystem.getRequirePath() .. self.added_path)
 	else
-		print('fug')
+		assert(false, "Base path was wrong or broken.")
 	end
 	
 	-- set where the emulation should draw
@@ -106,7 +170,7 @@ function projector:initialize(entry, x, y, w, h)
 	self.asc = getfenv()
 	
 	-- load our core
-	self.env = honk_load_core(self.entry)
+	self.env = self:load_core(self.entry, exposed)
 	self.env.love.load()
 end
 
@@ -170,11 +234,12 @@ end
 
 function projector:draw()
 	love.graphics.push("all")
+	
 	love.graphics.translate(self.x, self.y)
 	love.graphics.scale(self.w/love.graphics.getWidth(), self.h/love.graphics.getHeight())
 	love.graphics.setScissor(self.x, self.y, self.w, self.h)
 	self:doInEnv(self.env.love.draw)
-	--love.graphics.setScissor()
+	
 	love.graphics.pop()
 end
 

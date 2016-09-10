@@ -1,6 +1,7 @@
+io.stdout:setvbuf("no")
 local imgui = require("imgui")
-local UIHelper = require("src.classes.UIHelper")()
-local Editor = require("src.classes.Editor")()
+local UIHelper = require("src.classes.UIHelper"):new()
+local Editor = require("src.classes.Editor"):new('yay')
 local projector = require("libs.projector")
 local nogame, pong
 
@@ -25,68 +26,27 @@ entitySelected->sprite->color.b = color[2];
 entitySelected->sprite->color.a = color[3];
 ]]
 
-local items = {}
-
-function consoleLog(status, text)
-	table.insert(items, {status=status, text=text})
-end
-
-local function doConsole()
-	imgui.PushStyleVar("ItemSpacing", 4, 1)
-	for i,item in ipairs(items) do
-		
-		--if (!filter.PassFilter(item))
-		--	continue;
-		local color = { 1.0, 1.0, 1.0, 1.0 }
-		if item.status == 'nay' then
-			color = { 1.0, 0.4, 0.4, 1.0 }
-		elseif item.status == 'warn' then
-			color = { 1.0, 0.78, 0.58, 1.0 }
-		elseif item.status == 'yay' then
-			color = { 0.4, 1.0, 0.4, 1.0 }
-		end
-		
-		imgui.PushStyleColor("Text", unpack(color))
-		
-		imgui.TextUnformatted("[" .. item.status .. "] " .. item.text)
-		imgui.PopStyleColor()
-	end
-	imgui.PopStyleVar()
-end
-
 --
 -- LOVE callbacks
 --
 
+-- this gets merged into the sandboxes
+-- therefore, we are exposing the gift of sandsmas here
+local sandsmas = {
+	sandsmas = {
+		Editor = Editor
+	}
+}
+
 function love.load(arg)
-	nogame = projector:new("project/nogame.lua")
-	pong = projector:new("project/main.lua")
+	nogame = projector:new("project/nogame.lua", sandsmas)
+	pong = projector:new("project/main.lua", sandsmas)
 end
 
 function love.update(dt)
 	imgui.NewFrame()
 	nogame:update(dt)
 	pong:update(dt)
-end
-
-function Inspect(var)
-	if imgui.CollapsingHeader(tostring(var)) then
-		for k, v in pairs(var) do
-			local typ = type(v)
-			if typ == "number" then
-				local num, dec = math.modf(v)
-				if dec then
-					imgui.InputFloat(k, v)
-				else
-					imgui.InputFloat(k, v)
-				end
-			elseif typ == "string" then
-				imgui.InputText(k, v, 40)
-			else
-				imgui.InputText(k, tostring(v), 40)
-			end
-		end
-	end
 end
 
 function love.draw()
@@ -134,9 +94,7 @@ function love.draw()
 			imgui.SetNextDock("Right")
 			
 			if imgui.BeginDock("Inspector") then
-				Inspect(pong.env.objects['Ball'][1])
-				Inspect(pong.env.objects['Pad'][1])
-				Inspect(pong.env.objects['Pad'][2])
+				Editor:RenderInspector()
 			end
 			imgui.EndDock()
 			
@@ -147,7 +105,7 @@ function love.draw()
 			end
 			imgui.EndDock()
 			if imgui.BeginDock("Console") then
-				doConsole()
+				Editor:RenderConsole()
 			end
 			imgui.EndDock()
 			
@@ -211,7 +169,7 @@ function love.keypressed(key)
 		love.event.quit()
 	end
 	if key == "y" then
-		consoleLog('error', "too many dannies")
+		Editor:ConsoleLog('error', "too many dannies")
 	end
 end
 

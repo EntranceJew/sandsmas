@@ -1,4 +1,6 @@
-local class = require('middleclass')
+local Editor = sandsmas.Editor
+
+local class = require('libs.middleclass.middleclass')
 objects = { Pad = {}, Ball = {} }
 local scale = function(valueIn, baseMin, baseMax, limitMin, limitMax)
 	return ((limitMax - limitMin) * (valueIn - baseMin) / (baseMax - baseMin)) + limitMin
@@ -45,9 +47,9 @@ function Pad:update(dt)
 	if love.keyboard.isDown(self.upKey) and love.keyboard.isDown(self.downKey) then
 		-- what do you expect?
 	elseif love.keyboard.isDown(self.upKey) then
-		self.y = self.y + self.moveSpeed
-	elseif love.keyboard.isDown(self.downKey) then
 		self.y = self.y - self.moveSpeed
+	elseif love.keyboard.isDown(self.downKey) then
+		self.y = self.y + self.moveSpeed
 	end
 	
 	if self.y < -self.extent then
@@ -132,7 +134,7 @@ function Ball:check_goal(pad)
 		self.x = 0
 		self.vx = -self.vx
 		objects['Pad'][scoringPlayer].score = objects['Pad'][scoringPlayer].score + 1
-		consoleLog(logStatus, "Player #" .. scoringPlayer .. " scored a goal! " .. logBanter)
+		Editor:ConsoleLog(logStatus, "Player #" .. scoringPlayer .. " scored a goal! " .. logBanter)
 	end
 end
 
@@ -145,9 +147,9 @@ end
 ]]
 
 function love.load(args)
-	Pad:new("up", "down")
-	Pad:new("left", "right")
-	Ball:new()
+	Editor:AddSelection( Ball:new() )
+	Editor:AddSelection( Pad:new("up", "down") )
+	Editor:AddSelection( Pad:new("left", "right") )
 end
 
 function love.update(dt)
