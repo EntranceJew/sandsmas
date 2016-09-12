@@ -39,8 +39,8 @@ local sandsmas = {
 }
 
 function love.load(arg)
-	nogame = projector:new("project/nogame.lua", sandsmas)
-	pong = projector:new("project/main.lua", sandsmas)
+	nogame = projector:new("project/nogame/main.lua", sandsmas)
+	pong = projector:new("project/pong/main.lua", sandsmas)
 end
 
 function love.update(dt)

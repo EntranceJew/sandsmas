@@ -14,7 +14,7 @@ local Pad = class('Pad')
 local Ball = class('Ball')
 
 Pad.static.score_to_win = 6
-Pad.static.color = {255,255,255}
+Pad.static.color = {1.0,1.0,1.0,1.0}
 
 function Pad:initialize(upKey, downKey)
 	self.upKey = upKey or "w"
@@ -60,13 +60,13 @@ function Pad:update(dt)
 	end
 	
 	if self.score > Pad.score_to_win and self.color == Pad.color then
-		self.color = {255,0,0}
+		self.color = {1.0,0.0,0.0,1.0}
 	end
 end
 
 function Pad:draw()
 	if self.color ~= Pad.color then
-		love.graphics.setColor(unpack(self.color))
+		love.graphics.setColor(self.color[1]*255, self.color[2]*255, self.color[3]*255, self.color[4]*255)
 	end
 	love.graphics.rectangle("fill", (Ball.outer_limit_x*self.sign)-10, self.y - 50, 20, 100)
 end
