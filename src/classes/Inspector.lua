@@ -81,6 +81,10 @@ function Inspector:SetSelection(...)
 	self.selection = {...}
 end
 
+function Inspector:ClearSelection()
+	self.selection = {}
+end
+
 function Inspector:Render()
 	for k,v in ipairs(self.selection) do
 		self:RenderInspect(v)

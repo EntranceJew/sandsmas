@@ -4,6 +4,7 @@ local UIHelper = require("src.classes.UIHelper"):new()
 local editor = require("src.classes.Editor"):new('yay')
 local projector = require("libs.projector")
 local nogame, pong
+local lume = require("libs.lume.lume")
 
 --[[ vec2
 float dim[2] = { entitySelected->sprite->dimension.x, entitySelected->sprite->dimension.y }
@@ -47,6 +48,12 @@ function love.update(dt)
 	imgui.NewFrame()
 	nogame:update(dt)
 	pong:update(dt)
+	
+	-- reverse the hierarchy stack so things are roughly in hierarchial view
+	editor.inspector:ClearSelection()
+	for _, uid in lume.ripairs(editor.hierarchy.open_stack) do
+		editor.inspector:AddSelection(editor.hierarchy.objects[uid])
+	end
 end
 
 function love.draw()
@@ -112,7 +119,7 @@ function love.draw()
 			imgui.SetNextDock("Top")
 			
 			if imgui.BeginDock("Hierarchy") then
-				imgui.Text("Hierarchy")
+				editor.hierarchy:Render()
 			end
 			imgui.EndDock()
 			

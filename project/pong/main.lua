@@ -147,6 +147,10 @@ end
 ]]
 
 function love.load(args)
+	local root = editor.hierarchy:NewObject("Root")
+	local balls = editor.hierarchy:NewObject("Balls", root)
+	local paddles = editor.hierarchy:NewObject("Pads", root)
+	
 	Ball:new()
 	Pad:new("up", "down")
 	Pad:new("left", "right")
@@ -157,12 +161,16 @@ function love.load(args)
 	for k1,v1 in pairs(objects) do
 		for k2,v2 in pairs(v1) do
 			editor.hierarchy:Register( v2 )
-			table.insert( selection, v2 )
+			local parent
+			if k1 == 'Ball' then
+				parent = balls
+			elseif k1 == 'Pad' then
+				parent = paddles
+			end
+			
+			editor.hierarchy:SetObjectParent( v2,  parent )
 		end
 	end
-	
-	-- set the selection
-	editor.inspector:SetSelection( unpack(selection) )
 end
 
 function love.update(dt)

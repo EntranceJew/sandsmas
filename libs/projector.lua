@@ -171,7 +171,10 @@ function projector:initialize(entry, exposed, x, y, w, h)
 	
 	-- load our core
 	self.env = self:load_core(self.entry, exposed)
-	self.env.love.load()
+	
+	if self.env.love.load then
+		self:doInEnv( self.env.love.load )
+	end
 end
 
 function projector:enterEnvironment()
