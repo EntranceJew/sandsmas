@@ -1,7 +1,7 @@
 io.stdout:setvbuf("no")
 local imgui = require("imgui")
 local UIHelper = require("src.classes.UIHelper"):new()
-local Editor = require("src.classes.Editor"):new('yay')
+local editor = require("src.classes.Editor"):new('yay')
 local projector = require("libs.projector")
 local nogame, pong
 
@@ -34,7 +34,7 @@ entitySelected->sprite->color.a = color[3];
 -- therefore, we are exposing the gift of sandsmas here
 local sandsmas = {
 	sandsmas = {
-		Editor = Editor
+		editor = editor
 	}
 }
 
@@ -94,7 +94,7 @@ function love.draw()
 			imgui.SetNextDock("Right")
 			
 			if imgui.BeginDock("Inspector") then
-				Editor:RenderInspector()
+				editor.inspector:Render()
 			end
 			imgui.EndDock()
 			
@@ -105,7 +105,7 @@ function love.draw()
 			end
 			imgui.EndDock()
 			if imgui.BeginDock("Console") then
-				Editor:RenderConsole()
+				editor.console:Render()
 			end
 			imgui.EndDock()
 			
@@ -169,7 +169,7 @@ function love.keypressed(key)
 		love.event.quit()
 	end
 	if key == "y" then
-		Editor:ConsoleLog('error', "too many dannies")
+		editor.console:Log('error', "too many dannies")
 	end
 end
 

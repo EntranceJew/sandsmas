@@ -1,4 +1,4 @@
-local Editor = sandsmas.Editor
+local editor = sandsmas.editor
 
 local class = require('libs.middleclass.middleclass')
 objects = { Pad = {}, Ball = {} }
@@ -134,7 +134,7 @@ function Ball:check_goal(pad)
 		self.x = 0
 		self.vx = -self.vx
 		objects['Pad'][scoringPlayer].score = objects['Pad'][scoringPlayer].score + 1
-		Editor:ConsoleLog(logStatus, "Player #" .. scoringPlayer .. " scored a goal! " .. logBanter)
+		editor.console:Log(logStatus, "Player #" .. scoringPlayer .. " scored a goal! " .. logBanter)
 	end
 end
 
@@ -147,9 +147,22 @@ end
 ]]
 
 function love.load(args)
-	Editor:AddSelection( Ball:new() )
-	Editor:AddSelection( Pad:new("up", "down") )
-	Editor:AddSelection( Pad:new("left", "right") )
+	Ball:new()
+	Pad:new("up", "down")
+	Pad:new("left", "right")
+	
+	-- register all the objects we made
+	-- collect them for a selection
+	local selection = {}
+	for k1,v1 in pairs(objects) do
+		for k2,v2 in pairs(v1) do
+			editor.hierarchy:Register( v2 )
+			table.insert( selection, v2 )
+		end
+	end
+	
+	-- set the selection
+	editor.inspector:SetSelection( unpack(selection) )
 end
 
 function love.update(dt)
