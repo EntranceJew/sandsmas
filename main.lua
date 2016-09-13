@@ -4,28 +4,6 @@ local UIHelper = require("src.classes.UIHelper"):new()
 local editor = require("src.classes.Editor"):new('yay')
 local projector = require("libs.projector")
 local nogame, pong
-local lume = require("libs.lume.lume")
-
---[[ vec2
-float dim[2] = { entitySelected->sprite->dimension.x, entitySelected->sprite->dimension.y }
-imgui.InputFloat2("Dimension", dim)
-]]
-
---[[ vec2
-float pos[2] = { entitySelected->position.x, entitySelected->position.y };
-imgui.InputFloat2("Position", pos);
-entitySelected->position.x = pos[0];
-entitySelected->position.y = pos[1];
-]]
-
---[[ color4
-float color[4] = { entitySelected->sprite->color.r, entitySelected->sprite->color.g, entitySelected->sprite->color.b, entitySelected->sprite->color.a };
-imgui.ColorEdit4("Color", color);
-entitySelected->sprite->color.r = color[0];
-entitySelected->sprite->color.g = color[1];
-entitySelected->sprite->color.b = color[2];
-entitySelected->sprite->color.a = color[3];
-]]
 
 --
 -- LOVE callbacks
@@ -42,6 +20,15 @@ local sandsmas = {
 function love.load(arg)
 	nogame = projector:new("project/nogame/main.lua", sandsmas)
 	pong = projector:new("project/pong/main.lua", sandsmas)
+	
+	local testfunc = function() end
+	UIHelper:AddMenu("File/New", testfunc)
+	UIHelper:AddMenu("File/Open", testfunc)
+	UIHelper:AddMenu("File/Save", testfunc)
+	UIHelper:AddMenu("File/Save As...", testfunc)
+	UIHelper:AddMenu("Edit/This", testfunc)
+	UIHelper:AddMenu("Edit/Thing", testfunc)
+	UIHelper:AddMenu("Help/About", testfunc)
 end
 
 function love.update(dt)
@@ -51,47 +38,14 @@ function love.update(dt)
 	
 	-- reverse the hierarchy stack so things are roughly in hierarchial view
 	editor.inspector:ClearSelection()
-	for _, uid in lume.ripairs(editor.hierarchy.open_stack) do
+	for _, uid in ipairs(editor.hierarchy.chrono_selection) do
 		editor.inspector:AddSelection(editor.hierarchy.objects[uid])
 	end
 end
 
 function love.draw()
 	local wx, wy, x, y
-	if imgui.BeginMainMenuBar() then
-		if imgui.BeginMenu("File") then
-			imgui.MenuItem("New")
-			imgui.MenuItem("Open")
-			imgui.MenuItem("Save")
-			imgui.MenuItem("Save As...")
-			imgui.EndMenu()
-		end
-		if imgui.BeginMenu("Edit") then
-			imgui.MenuItem("Test")
-			imgui.EndMenu()
-		end
-		if imgui.BeginMenu("Call") then
-			imgui.MenuItem("Test")
-			imgui.EndMenu()
-		end
-		if imgui.BeginMenu("The") then
-			imgui.MenuItem("Test")
-			imgui.EndMenu()
-		end
-		if imgui.BeginMenu("Cops") then
-			imgui.MenuItem("Test")
-			imgui.EndMenu()
-		end
-		if imgui.BeginMenu("Window") then
-			imgui.MenuItem("Test")
-			imgui.EndMenu()
-		end
-		if imgui.BeginMenu("Help") then
-			imgui.MenuItem("Test")
-			imgui.EndMenu()
-		end
-		imgui.EndMainMenuBar()
-	end
+	UIHelper:RenderMenu()
 	
 	imgui.SetNextWindowPos(0, 0)
 	imgui.SetNextWindowSize(love.graphics.getWidth(), love.graphics.getHeight())
