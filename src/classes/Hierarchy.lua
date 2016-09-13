@@ -55,7 +55,7 @@ function Hierarchy:RenderObject(object)
 	if node_open and has_children then
 		for _, child_object in pairs(self.objects) do
 			if self.parents[child_object.id] == object.id then
-				self:AltRenderObject(child_object)
+				self:RenderObject(child_object)
 			end
 		end
 		imgui.TreePop()
@@ -95,7 +95,7 @@ end
 function Hierarchy:Render()
 	for _, object in pairs(self.objects) do
 		if self.parents[object.id] == '' then
-			self:AltRenderObject(object)
+			self:RenderObject(object)
 		end
 	end
 end
