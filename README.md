@@ -27,3 +27,20 @@ Below are some example layer categories and some candidate libraries that would 
 * **Upkeep:** Busted, [RTFM](https://github.com/airstruck/rtfm), LDoc, luastache, semver
 * **High Level:** lua-imgur, gyfcat, gifload, magick, sfxr, pegasus, turbo, lua-websockets, lua-sqlite3
 
+# Good Reads
+## Design Goals
+* [how to a framework that is not in the way](http://weierophinney.github.io/2015-10-22-ZF3/#/)
+* [reading and writing network packets](http://gafferongames.com/building-a-game-network-protocol/reading-and-writing-packets/)
+* [middleclass class standards, for interal classes](https://github.com/kikito/middleclass/wiki)
+* [regions for humans](http://magcius.github.io/xplain/article/regions.html)
+
+## LuaJIT
+* [luajit and C calls](http://stackoverflow.com/questions/34405678/using-lua-ffi-with-complex-types)
+* [type conversion](http://luajit.org/ext_ffi_semantics.html#convert)
+* [idioms](http://luajit.org/ext_ffi_tutorial.html#idioms)
+
+
+## Technical Reference
+* [setfenv outside lua51](http://leafo.net/guides/setfenv-in-lua52-and-above.html)
+* [non-recursive deepcopy](https://gist.github.com/Deco/3985043)
+* [love console and zerobrane](https://github.com/EntranceJew/love-notes/blob/master/love2d-and-zerobrane.md)

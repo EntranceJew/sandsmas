@@ -57,9 +57,7 @@ function UIHelper:AddMenu(path, callback, shortcut, selected, enabled)
 	local ctable = self.menu
 	local depth = #parts
 	
-	print('building: ', path)
 	for k,v in pairs(parts) do
-		print(k, depth, v)
 		if k == depth then
 			ctable[v] = callback
 		else
