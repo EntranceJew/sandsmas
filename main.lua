@@ -13,7 +13,8 @@ local nogame, pong
 -- therefore, we are exposing the gift of sandsmas here
 local sandsmas = {
 	sandsmas = {
-		editor = editor
+		editor = editor,
+		imgui = imgui,
 	}
 }
 

@@ -1,4 +1,5 @@
 local editor = sandsmas.editor
+local imgui = sandsmas.imgui
 
 local class = require('libs.middleclass.middleclass')
 objects = { Pad = {}, Ball = {} }
@@ -12,6 +13,43 @@ end
 
 local Pad = class('Pad')
 local Ball = class('Ball')
+local Transform = class('Transform')
+
+function Transform:initialize(x, y, sx, sy, rx, ry)
+	self.x = x or 0
+	self.y = y or 0
+	self.sx = sx or 1
+	self.sy = sy or 1
+	self.rx = rx or 0
+	self.ry = ry or 0
+end
+
+function Transform:setPosition(x, y)
+	self.x = x or self.x
+	self.y = y or self.y
+end
+
+function Transform:getPosition()
+	return self.x, self.y
+end
+
+function Transform:setScale(sx, sy)
+	self.sx = sx or self.sx
+	self.sy = sy or self.sy
+end
+
+function Transform:getScale()
+	return self.sx, self.sy
+end
+
+function Transform:setRotation(rx, ry)
+	self.rx = rx or self.rx
+	self.ry = ry or self.ry
+end
+
+function Transform:getRotation()
+	return self.rx, self.ry
+end
 
 Pad.static.score_to_win = 6
 Pad.static.color = {1.0,1.0,1.0,1.0}
@@ -20,9 +58,9 @@ function Pad:initialize(upKey, downKey)
 	self.upKey = upKey or "w"
 	self.downKey = downKey or "s"
 	
-	self.playerNo = #objects['Pad'] + 1
+	self.honk = true
 	
-	self.y = 0
+	self.playerNo = #objects['Pad'] + 1
 	
 	self.width = 60
 	
@@ -39,6 +77,8 @@ function Pad:initialize(upKey, downKey)
 		self.sign = self.sign * -1
 	end
 	
+	self.transform = Transform:new(0, 0, 20, 100)
+	
 	table.insert(objects['Pad'], self)
 end
 
@@ -47,16 +87,16 @@ function Pad:update(dt)
 	if love.keyboard.isDown(self.upKey) and love.keyboard.isDown(self.downKey) then
 		-- what do you expect?
 	elseif love.keyboard.isDown(self.upKey) then
-		self.y = self.y - self.moveSpeed
+		self.transform:setPosition(nil, self.transform.y - self.moveSpeed)
 	elseif love.keyboard.isDown(self.downKey) then
-		self.y = self.y + self.moveSpeed
+		self.transform:setPosition(nil, self.transform.y + self.moveSpeed)
 	end
 	
-	if self.y < -self.extent then
-		self.y = -self.extent
+	if self.transform.y < -self.extent then
+		self.transform:setPosition(nil, -self.extent)
 	end
-	if self.y > self.extent then
-		self.y = self.extent
+	if self.transform.y > self.extent then
+		self.transform:setPosition(nil, self.extent)
 	end
 	
 	if self.score > Pad.score_to_win and self.color == Pad.color then
@@ -68,7 +108,7 @@ function Pad:draw()
 	if self.color ~= Pad.color then
 		love.graphics.setColor(self.color[1]*255, self.color[2]*255, self.color[3]*255, self.color[4]*255)
 	end
-	love.graphics.rectangle("fill", (Ball.outer_limit_x*self.sign)-10, self.y - 50, 20, 100)
+	love.graphics.rectangle("fill", (Ball.outer_limit_x*self.sign)-10, self.transform.y - 50, 20, 100)
 end
 
 --[[
@@ -115,7 +155,7 @@ function Ball:check_goal(pad)
 		boundaryCheck = self.x > self.inner_limit_x*pad.sign and self.x < self.outer_limit_x*pad.sign
 	end
 	
-	if boundaryCheck and math.abs(pad.y - self.y) < pad.width then
+	if boundaryCheck and math.abs(pad.transform.y - self.y) < pad.width then
 		self.speed = self.speed + scale(pad.playerNo, 1, 2, 0.2, 0.5)
 		self.x = self.inner_limit_x*pad.sign
 		self.vx = self.speed*pad.sign*-1
@@ -154,6 +194,52 @@ function love.load(args)
 	Ball:new()
 	Pad:new("up", "down")
 	Pad:new("left", "right")
+	
+	editor.inspector:SetTypeGUI(
+		"instance of class Transform",
+		function(name, value)
+			imgui.Columns(2, "visualizer", false)
+			imgui.Text(name)
+			imgui.NextColumn()
+			
+			imgui.Columns(2, "labels_and_vis")
+			imgui.Text("Position"); imgui.NextColumn()
+			local changed_x, new_x = imgui.InputFloat("x", value.x); imgui.SameLine()
+			if changed_x then value.x = new_x end
+			local changed_y, new_y = imgui.InputFloat("y", value.y)
+			if changed_y then value.y = new_y end
+			imgui.NextColumn()
+			
+			imgui.Text("Scale"); imgui.NextColumn()
+			local changed_sx, new_sx = imgui.InputFloat("sx", value.sx); imgui.SameLine()
+			if changed_sx then value.sx = new_sx end
+			local changed_sy, new_sy = imgui.InputFloat("sy", value.sy)
+			if changed_sy then value.sy = new_sy end
+			imgui.NextColumn()
+			
+			imgui.Text("Rotation"); imgui.NextColumn()
+			local changed_rx, new_rx = imgui.InputFloat("rx", value.rx); imgui.SameLine()
+			if changed_rx then value.rx = new_rx end
+			local changed_ry, new_ry = imgui.InputFloat("ry", value.ry)
+			if changed_ry then value.ry = new_ry end
+			imgui.NextColumn()
+			imgui.Columns(1)
+			
+			imgui.Columns(1)
+			
+			return (changed_x or changed_y or
+					changed_sx or changed_sy or
+					changed_rx or changed_ry),
+					value
+		end
+	)
+	
+	editor.inspector:SetTypeIdentifier(
+		"instance of class Transform",
+		function(name, value)
+			return type(value) == 'table' and value.class and value.class == Transform
+		end
+	)
 	
 	-- register all the objects we made
 	-- collect them for a selection

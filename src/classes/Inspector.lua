@@ -2,7 +2,7 @@ local Inspector = require('libs.middleclass.middleclass')('Inspector')
 
 local imgui = require('imgui')
 
-Inspector.static.type_lookups = {
+Inspector.static.type_guis = {
 	default = function(name, value)
 		return imgui.InputText(name, tostring(value), 40, {"ReadOnly"})
 	end,
@@ -15,7 +15,7 @@ Inspector.static.type_lookups = {
 		return imgui.ColorEdit4(name, unpack(value))
 	end,
 }
-Inspector.static.type_guessers = {
+Inspector.static.type_identifiers = {
 	float = function(name, value)
 		local num, dec
 		if type(value) == "number" then
@@ -69,6 +69,32 @@ Inspector.static.type_guessers = {
 ]]
 function Inspector:initialize(args)
 	self.selection = {}
+	
+	self.type_guis = {}
+	for k, v in pairs(Inspector.type_guis) do
+		self.type_guis[k] = v
+	end
+	
+	self.type_identifiers = {}
+	for k, v in pairs(Inspector.type_identifiers) do
+		self.type_identifiers[k] = v
+	end
+end
+
+-- TypeGUI = function(name, value)
+-- 	return didChange, newValue1, newValue2, ...
+-- end
+function Inspector:SetTypeGUI(typeName, func)
+	assert(not self.type_guis[typeName], "A type GUI already exists for " .. tostring(typeName))
+	self.type_guis[typeName] = func
+end
+
+-- TypeIdentifier = function(name, value)
+-- 	return isTypeForKey
+-- end
+function Inspector:SetTypeIdentifier(typeName, func)
+	assert(not self.type_identifiers[typeName], "A type identifier already exists for " .. tostring(typeName))
+	self.type_identifiers[typeName] = func
 end
 
 function Inspector:AddSelection(...)
@@ -105,18 +131,19 @@ function Inspector:RenderInspect(var)
 			
 			-- attempt to obtain the type from a sequence of functions
 			-- if any function returns true, it is that type
-			for k0, v0 in pairs(Inspector.type_guessers) do
-				if v0(k, v) then
+			for k0, v0 in pairs(self.type_identifiers) do
+				local result = v0(k, v)
+				if result then
 					atype = k0
 				end
 			end
 			
-			if not Inspector.type_lookups[atype] then
+			if not self.type_guis[atype] then
 				atype = 'default'
 			end
 			
-			if Inspector.type_lookups[atype] then
-				out = {Inspector.type_lookups[atype](k, v)}
+			if self.type_guis[atype] then
+				out = {self.type_guis[atype](k, v)}
 				
 				-- get the status alone
 				value_changed = out[1]
