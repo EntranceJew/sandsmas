@@ -174,7 +174,9 @@ function Ball:check_goal(pad)
 		self.x = 0
 		self.vx = -self.vx
 		objects['Pad'][scoringPlayer].score = objects['Pad'][scoringPlayer].score + 1
-		editor.console:Log(logStatus, "Player #" .. scoringPlayer .. " scored a goal! " .. logBanter)
+		local logLine = "Player #" .. scoringPlayer .. " scored a goal! " .. logBanter
+		love.window.setTitle(logLine)
+		editor.console:Log(logStatus, logLine)
 	end
 end
 

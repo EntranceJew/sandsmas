@@ -16,6 +16,7 @@
 	* makes u think
 ]]
 local lume = require("libs.lume.lume")
+local fakelove = require("libs.fakelove")
 
 local projector = {}
 projector.__index = projector
@@ -38,7 +39,7 @@ end
 function projector:load_core(entry, exposed)
 	-- create new environment
 	local env = { 
-		love = clone(love)
+		love = fakelove:new(love)
 	}
 	
 	-- merge an external environment
@@ -51,9 +52,6 @@ function projector:load_core(entry, exposed)
 	
 	-- put it on us
 	self.env = env
-	
-	-- hook to set the environment before executing any sort of code in it
-	self:loveEncapsulate()
 	
 	-- load the chunk
 	local ok, chunk = pcall( love.filesystem.load, entry )
@@ -152,18 +150,10 @@ function projector:initialize(entry, exposed, x, y, w, h)
 		assert(false, "Base path was wrong or broken.")
 	end
 	
-	-- set where the emulation should draw
-	self.x      = x or 0
-	self.y      = y or 0
-	-- set how large the emulation should be
-	self.w = w or love.graphics.getWidth()
-	self.h = h or love.graphics.getHeight()
-	
-	-- timers for play / focus emulation
+	-- timers for play
 	self.dt = 0
 	self.gt = 0
 	self.tt = 0
-	self.active = true
 	
 	-- preserve reality as it was before we messed with things
 	-- the "absolutely safe capsule" for package, etc.
@@ -175,10 +165,6 @@ function projector:initialize(entry, exposed, x, y, w, h)
 	if self.env.love.load then
 		self:doInEnv( self.env.love.load )
 	end
-end
-
-function projector:enterEnvironment()
-	
 end
 
 function projector:renderAbsolutelySafeCapsule()
@@ -193,32 +179,6 @@ function projector:renderAbsolutelySafeCapsule()
 			searchpath = package.searchpath
 		},
 	}
-end
-
---[[
-	cpath = package.cpath,
-	loaded = {}, -- blanking
-	loadlib = package.loadlib,
-	path = package.path,
-	preload = {},
-	searchers = {},
-	searchpath = package.searchpath
-]]
-
-function projector:setPos(x, y)
-	self.x = x or self.x
-	self.y = y or self.y
-end
-
-function projector:resize(w, h)
-	if self.w ~= w or self.h ~= h then
-		self.w = w or self.w
-		self.h = h or self.h
-		
-		if self.env.love.resize then
-			self:doInEnv(self.env.love.resize, self.w, self.h)
-		end
-	end
 end
 
 function projector:doInEnv(func, ...)
@@ -238,27 +198,23 @@ end
 function projector:draw()
 	love.graphics.push("all")
 	
-	love.graphics.translate(self.x, self.y)
-	love.graphics.scale(self.w/love.graphics.getWidth(), self.h/love.graphics.getHeight())
-	love.graphics.setScissor(self.x, self.y, self.w, self.h)
+	local x, y = self.env.love.window.getPosition()
+	local w, h = self.env.love.window.getMode()
+	love.graphics.translate(x, y)
+	love.graphics.scale(w/love.graphics.getWidth(), h/love.graphics.getHeight())
+	love.graphics.setScissor(x, y, w, h)
 	self:doInEnv(self.env.love.draw)
 	
 	love.graphics.pop()
 end
 
 function projector:update(dt)
-	if self.active then
+	if self.env.love.window.hasFocus() then
 		self.gt = self.gt + dt
 		self.dt = dt
 		self:doInEnv(self.env.love.update, dt)
 	end
 	self.tt = self.tt + dt
-end
-
-function projector:keypressed(key, scan)
-	if self.env.love.keypressed then
-		self:doInEnv(self.env.love.keypressed)
-	end
 end
 
 return setmetatable({new=new}, {__call=function(_,...) return new(...) end})

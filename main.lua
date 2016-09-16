@@ -81,26 +81,20 @@ function love.draw()
 			imgui.SetNextDock("Right")
 			
 			if imgui.BeginDock("Scene") then
-				nogame.active = imgui.IsWindowFocused() 
+				nogame.env.love.store.focus = imgui.IsWindowFocused() 
 				local x, y = imgui.GetWindowPos()
 				local w, h = imgui.GetWindowSize()
+				
+				nogame.env.love.window.setPosition(x, y)
+				nogame.env.love.window.setMode(w, h)
 				UIHelper:PushPostRender(function()
-					nogame:setPos(x, y)
-					nogame:resize(w, h)
 					nogame:draw()
 				end)
 			end
 			imgui.EndDock()
 			
 			if imgui.BeginDock("Game") then
-				pong.active = imgui.IsWindowFocused() 
-				local x, y = imgui.GetWindowPos()
-				local w, h = imgui.GetWindowSize()
-				UIHelper:PushPostRender(function()
-					pong:setPos(x, y)
-					pong:resize(w, h)
-					pong:draw()
-				end)
+				-- pong game goes here when active
 			end
 			imgui.EndDock()
 			
@@ -109,6 +103,23 @@ function love.draw()
 	UIHelper:End()
 
 	love.graphics.clear(100, 100, 100, 255)
+	
+	if imgui.Begin(pong.env.love.window.getTitle() .. "###GameWindow") then
+		pong.env.love.store.focus = imgui.IsWindowFocused()
+		local x, y = imgui.GetWindowPos()
+		local w, h = imgui.GetWindowSize()
+		local titleHeight = 19
+		y = y + titleHeight
+		h = h - titleHeight
+		
+		pong.env.love.window.setPosition(x, y)
+		pong.env.love.window.setMode(w, h)
+		UIHelper:PushPostRender(function()
+			pong:draw()
+		end)
+	end
+	imgui.End()
+	
 	imgui.Render()
 	
 	UIHelper:PostRender()
@@ -123,34 +134,54 @@ end
 --
 function love.textinput(t)
 	imgui.TextInput(t)
+	if not imgui.GetWantCaptureKeyboard() then
+		
+	end
 end
 
 function love.keypressed(key)
 	imgui.KeyPressed(key)
-	if key == "escape" then
-		love.event.quit()
-	end
-	if key == "y" then
-		editor.console:Log('error', "too many dannies")
+	if not imgui.GetWantCaptureKeyboard() then
+		if key == "escape" then
+			love.event.quit()
+		end
+		if key == "y" then
+			editor.console:Log('error', "too many dannies")
+		end
 	end
 end
 
 function love.keyreleased(key)
 	imgui.KeyReleased(key)
+	if not imgui.GetWantCaptureKeyboard() then
+		
+	end
 end
 
 function love.mousemoved(x, y)
 	imgui.MouseMoved(x, y)
+	if not imgui.GetWantCaptureMouse() then
+		
+	end
 end
 
 function love.mousepressed(x, y, button)
 	imgui.MousePressed(button)
+	if not imgui.GetWantCaptureMouse() then
+		
+	end
 end
 
 function love.mousereleased(x, y, button)
 	imgui.MouseReleased(button)
+	if not imgui.GetWantCaptureMouse() then
+		
+	end
 end
 
 function love.wheelmoved(x, y)
 	imgui.WheelMoved(y)
+	if not imgui.GetWantCaptureMouse() then
+		
+	end
 end
