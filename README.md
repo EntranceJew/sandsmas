@@ -31,7 +31,7 @@ Below are some example layer categories and some candidate libraries that would 
 ## Design Goals
 * [how to a framework that is not in the way](http://weierophinney.github.io/2015-10-22-ZF3/#/)
 * [reading and writing network packets](http://gafferongames.com/building-a-game-network-protocol/reading-and-writing-packets/)
-* [middleclass class standards, for interal classes](https://github.com/kikito/middleclass/wiki)
+* [middleclass class standards, for internal classes](https://github.com/kikito/middleclass/wiki)
 * [regions for humans](http://magcius.github.io/xplain/article/regions.html)
 
 ## LuaJIT
