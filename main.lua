@@ -104,7 +104,8 @@ function love.draw()
 
 	love.graphics.clear(100, 100, 100, 255)
 	
-	if imgui.Begin(pong.env.love.window.getTitle() .. "###GameWindow") then
+	local mx, my = love.mouse.getPosition()
+	if imgui.Begin(pong.env.love.window.getTitle() .. " | " .. mx .. "\\" .. my .. "###GameWindow") then
 		pong.env.love.store.focus = imgui.IsWindowFocused()
 		local x, y = imgui.GetWindowPos()
 		local w, h = imgui.GetWindowSize()
@@ -139,14 +140,15 @@ function love.textinput(t)
 	end
 end
 
-function love.keypressed(key)
+function love.keypressed(key, scan, isRepeat)
 	imgui.KeyPressed(key)
 	if not imgui.GetWantCaptureKeyboard() then
 		if key == "escape" then
 			love.event.quit()
-		end
-		if key == "y" then
+		elseif key == "y" then
 			editor.console:Log('error', "too many dannies")
+		else
+			pong.env.love.keypressed(key, scan, isRepeat)
 		end
 	end
 end

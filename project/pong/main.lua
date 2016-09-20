@@ -175,7 +175,6 @@ function Ball:check_goal(pad)
 		self.vx = -self.vx
 		objects['Pad'][scoringPlayer].score = objects['Pad'][scoringPlayer].score + 1
 		local logLine = "Player #" .. scoringPlayer .. " scored a goal! " .. logBanter
-		love.window.setTitle(logLine)
 		editor.console:Log(logStatus, logLine)
 	end
 end
@@ -267,6 +266,11 @@ function love.update(dt)
 			v2:update(dt)
 		end
 	end
+	local x, y = love.window.getPosition()
+	local w, h = love.window.getMode()
+	local mx, my = love.mouse.getPosition()
+	local newTitle = x .. "x" .. y .. "; " .. w .. "/" .. h .. "; " .. mx .. ":" .. my
+	love.window.setTitle(newTitle)
 end
 
 function love.draw()

@@ -8,7 +8,11 @@ local lume = require("libs.lume.lume")
 local fakelove = {}
 fakelove.__index = fakelove
 
-function deepcopy(orig)
+local function scale(valueIn, baseMin, baseMax, limitMin, limitMax)
+	return ((limitMax - limitMin) * (valueIn - baseMin) / (baseMax - baseMin)) + limitMin
+end
+
+local function deepcopy(orig)
 	local orig_type = type(orig)
 	local copy
 	if orig_type == 'table' then
@@ -34,6 +38,26 @@ function fakelove:initialize(reallove)
 	local x, y, display = reallove.window.getPosition()
 	local width, height, flags = reallove.window.getMode()
 	self.store = {
+		audio = {},
+		event = {},
+		filesystem = {},
+		font = {},
+		graphics = {},
+		image = {},
+		joystick = {},
+		keyboard = {},
+		math = {},
+		mouse = {
+			x = 0,
+			y = 0,
+		},
+		physics = {},
+		sound = {},
+		system = {},
+		thread = {},
+		timer = {},
+		touch = {},
+		video = {},
 		window = {
 			title = reallove.window.getTitle(),
 			x = x,
@@ -44,11 +68,22 @@ function fakelove:initialize(reallove)
 			flags = flags,
 			
 			focus = reallove.window.hasFocus(),
+			mouseFocus = reallove.window.hasMouseFocus(),
 		},
 	}
 	self.reallove = reallove
 	
 	local mergelove = {
+		mouse = {
+			getPosition = function()
+				local mx, my = reallove.mouse.getPosition()
+				if self.window.hasMouseFocus() then
+					self.store.mouse.x = mx - self.store.window.x
+					self.store.mouse.y = my - self.store.window.y
+				end
+				return self.store.mouse.x, self.store.mouse.y
+			end,
+		},
 		window = {
 			--[[
 			close = function() 
@@ -93,10 +128,15 @@ function fakelove:initialize(reallove)
 			hasFocus = function() 
 				return self.store.window.focus
 			end,
-			--[[
 			hasMouseFocus = function() 
-				
+				local mx, my = reallove.mouse.getPosition()
+				return (mx >= self.store.window.x
+					and my >= self.store.window.y
+					and mx <= self.store.window.x + self.store.window.width
+					and my <= self.store.window.y + self.store.window.height
+				)
 			end,
+			--[[
 			isDisplaySleepEnabled = function() 
 				
 			end,
