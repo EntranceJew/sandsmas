@@ -24,7 +24,7 @@ Below are some example layer categories and some candidate libraries that would 
 * **Logging:** ansicolors, [log.lua](https://github.com/rxi/log.lua), log-lua, [i18n](https://github.com/excessive/i18n), argparse
 * **Wiring:** talkback, middleclass, stateful, router.lua
 * **Advanced Items:** [lume](https://github.com/rxi/lume/), pool.lua, memoize, LuaFun, lua-stdlib, [knife](https://github.com/airstruck/knife), microlight, [CPML](https://github.com/excessive/cpml), LuaDate, dkjson, LuaFFT, Worp
-* **Upkeep:** Busted, [RTFM](https://github.com/airstruck/rtfm), [LDoc](https://github.com/stevedonovan/LDoc), [luastache](https://github.com/Olivine-Labs/lustache), [semver](https://github.com/kikito/semver.lua)
+* **Upkeep:** Busted, [RTFM](https://github.com/airstruck/rtfm), [LDoc](https://github.com/stevedonovan/LDoc), [lustache](https://github.com/Olivine-Labs/lustache), [semver](https://github.com/kikito/semver.lua)
 * **High Level:** lua-imgur, gyfcat, gifload, magick, sfxr, pegasus, turbo, lua-websockets, lua-sqlite3
 
 # Good Reads
