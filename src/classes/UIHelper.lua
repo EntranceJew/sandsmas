@@ -35,18 +35,15 @@ end
 
 function UIHelper:RenderMenu()
 	if imgui.BeginMainMenuBar() then
-		if imgui.BeginMenuBar() then
-			for k, v in pairs(self.menu) do
-				if type(v) == 'table' then
+		for k, v in pairs(self.menu) do
+			if type(v) == 'table' then
+				self:RenderMenuLevel(k, v)
+			elseif type(v) == 'function' then
+				if imgui.BeginMenu(k) then
 					self:RenderMenuLevel(k, v)
-				elseif type(v) == 'function' then
-					if imgui.BeginMenu(k) then
-						self:RenderMenuLevel(k, v)
-						imgui.EndMenu()
-					end
+					imgui.EndMenu()
 				end
 			end
-			imgui.EndMenuBar()
 		end
 		imgui.EndMainMenuBar()
 	end
