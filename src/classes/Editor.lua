@@ -1,7 +1,7 @@
 local Editor = require('libs.middleclass.middleclass')('Editor')
 
 --[[
-	Editor
+	@class Editor  An editor instance, contains references to other classes as internal components.
 ]]
 function Editor:initialize(args)
 	-- components

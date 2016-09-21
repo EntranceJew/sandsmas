@@ -3,8 +3,10 @@
 	another great job, EntranceJew "gee thanks"
 	MIT license probably.
 ]]
+--- @module fakelove   Pretend to be LÖVE.
 local lume = require("libs.lume.lume")
 
+--- @class fakelove  A fake instance of LÖVE.
 local fakelove = {}
 fakelove.__index = fakelove
 
@@ -27,6 +29,9 @@ local function deepcopy(orig)
 	return copy
 end
 
+--- @function fakelove.new   Launch the generator from the command line.
+--- @param table   Self.
+--- @param table   The real instance of love to duplicate.
 local function new(self, reallove)
 	local zt = deepcopy(reallove)
 	local t = setmetatable(zt, fakelove)

@@ -1,3 +1,6 @@
+--[[
+	@class Console  Puts colored text in a scrollable window.
+]]
 local Console = require('libs.middleclass.middleclass')('Console')
 
 local imgui = require('imgui')
@@ -9,14 +12,16 @@ Console.static.status_colors = {
 	yay = { 0.4, 1.0, 0.4, 1.0 }
 }
 
---[[
-	Console
-]]
 function Console:initialize(args)
 	self.console_history = {}
 	-- entries in the form of {status=status, text=text}
 end
 
+--[[
+	@method	Console:Log	Add text to the console.
+	@param	string	status	The color of the text.
+	@param	string	text	The text to log.
+]]
 function Console:Log(status, text)
 	table.insert(self.console_history, {
 		status = status,
@@ -24,6 +29,9 @@ function Console:Log(status, text)
 	})
 end
 
+--[[
+	@method	Console:Render	Draws the console's contents.
+]]
 function Console:Render()
 	imgui.PushStyleVar("ItemSpacing", 4, 1)
 	for i,item in ipairs(self.console_history) do

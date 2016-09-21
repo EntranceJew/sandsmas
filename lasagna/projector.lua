@@ -16,7 +16,7 @@
 	* makes u think
 ]]
 local lume = require("libs.lume.lume")
-local fakelove = require("libs.fakelove")
+local fakelove = require("lasagna.fakelove")
 
 local projector = {}
 projector.__index = projector

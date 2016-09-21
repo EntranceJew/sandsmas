@@ -2,7 +2,7 @@ io.stdout:setvbuf("no")
 local imgui = require("imgui")
 local UIHelper = require("src.classes.UIHelper"):new()
 local editor = require("src.classes.Editor"):new('yay')
-local projector = require("libs.projector")
+local projector = require("lasagna.projector")
 local nogame, pong
 
 --
