@@ -50,6 +50,11 @@ function fakelove:initialize(reallove)
 		mouse = {
 			x = 0,
 			y = 0,
+			buttons = {},
+			cursor = reallove.mouse.getCursor(),
+			grabbed = reallove.mouse.isGrabbed(),
+			visible = reallove.mouse.isVisible(),
+			relativeMode = reallove.mouse.getRelativeMode(),
 		},
 		physics = {},
 		sound = {},
@@ -68,7 +73,7 @@ function fakelove:initialize(reallove)
 			flags = flags,
 			
 			focus = reallove.window.hasFocus(),
-			mouseFocus = reallove.window.hasMouseFocus(),
+			mouseFocus = false,
 		},
 	}
 	self.reallove = reallove
@@ -76,12 +81,13 @@ function fakelove:initialize(reallove)
 	local mergelove = {
 		mouse = {
 			getPosition = function()
-				local mx, my = reallove.mouse.getPosition()
-				if self.window.hasMouseFocus() then
-					self.store.mouse.x = mx - self.store.window.x
-					self.store.mouse.y = my - self.store.window.y
-				end
 				return self.store.mouse.x, self.store.mouse.y
+			end,
+			getX = function()
+				return self.store.mouse.x
+			end,
+			getY = function()
+				return self.store.mouse.y
 			end,
 		},
 		window = {
@@ -129,12 +135,7 @@ function fakelove:initialize(reallove)
 				return self.store.window.focus
 			end,
 			hasMouseFocus = function() 
-				local mx, my = reallove.mouse.getPosition()
-				return (mx >= self.store.window.x
-					and my >= self.store.window.y
-					and mx <= self.store.window.x + self.store.window.width
-					and my <= self.store.window.y + self.store.window.height
-				)
+				return self.store.window.mouseFocus
 			end,
 			--[[
 			isDisplaySleepEnabled = function() 

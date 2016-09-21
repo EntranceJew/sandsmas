@@ -269,7 +269,13 @@ function love.update(dt)
 	local x, y = love.window.getPosition()
 	local w, h = love.window.getMode()
 	local mx, my = love.mouse.getPosition()
-	local newTitle = x .. "x" .. y .. "; " .. w .. "/" .. h .. "; " .. mx .. ":" .. my
+	local focus
+	if love.window.hasMouseFocus() then
+		focus = " (!)"
+	else
+		focus = " (?)"
+	end
+	local newTitle = x .. "x" .. y .. "; " .. w .. "/" .. h .. "; " .. mx .. ":" .. my .. focus
 	love.window.setTitle(newTitle)
 end
 
@@ -289,5 +295,7 @@ end
 function love.keypressed(key, scan)
 	if key == "i" then
 		love.graphics.setColor(0,0,255)
+	elseif key == "j" then
+		break_everything()
 	end
 end

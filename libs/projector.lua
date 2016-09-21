@@ -53,6 +53,9 @@ function projector:load_core(entry, exposed)
 	-- put it on us
 	self.env = env
 	
+	-- wipe all callbacks
+	self:loveEncapsulate()
+	
 	-- load the chunk
 	local ok, chunk = pcall( love.filesystem.load, entry )
 	assert(ok, "The entry point '" .. entry .. "' appears invalid.")
@@ -88,42 +91,18 @@ function projector:loveEncapsulate()
 	-- maybe_scopes: nogame, conf
 	
 	local bomb = [[
+	-- keep error handlers because they prevent silent crashes
 	local scopes = {
-		'directorydropped',
+		--'errhand',
+		--'threaderror',
 		'draw',
-		'errhand',
-		'filedropped',
-		'focus',
-		'gamepadaxis',
-		'gamepadpressed',
-		'gamepadreleased',
-		'joystickadded',
-		'joystickaxis',
-		'joystickhat',
-		'joystickpressed',
-		'joystickreleased',
-		'joystickremoved',
-		'keypressed',
-		'keyreleased',
 		'load',
-		'lowmemory',
-		'mousefocus',
-		'mousemoved',
-		'mousepressed',
-		'mousereleased',
-		'quit',
-		'resize',
 		'run',
-		'textedited',
-		'textinput',
-		'threaderror',
-		'touchmoved',
-		'touchpressed',
-		'touchreleased',
 		'update',
-		'visible',
-		'wheelmoved'
 	}
+	for k,v in pairs(love.handlers) do
+		love[k] = nil
+	end
 	for k,v in ipairs(scopes) do
 		love[v] = nil
 	end
@@ -195,6 +174,9 @@ function projector:doInEnv(func, ...)
 	return ok, result
 end
 
+--[[
+	LÖVE Callback Emulation Goes Here
+]]
 function projector:draw()
 	love.graphics.push("all")
 	
@@ -203,6 +185,7 @@ function projector:draw()
 	love.graphics.translate(x, y)
 	love.graphics.scale(w/love.graphics.getWidth(), h/love.graphics.getHeight())
 	love.graphics.setScissor(x, y, w, h)
+	-- @TODO: right here, we should reload the graphics state
 	self:doInEnv(self.env.love.draw)
 	
 	love.graphics.pop()
@@ -215,6 +198,76 @@ function projector:update(dt)
 		self:doInEnv(self.env.love.update, dt)
 	end
 	self.tt = self.tt + dt
+end
+
+-- do not use this from inside whatever is wrapping the projection's mousefocus
+-- unless the projection is fullscreened
+function projector:mousefocus(focus)
+	--[[
+		@TODO: special checks for when the mouse is given focus
+		before we know where it is
+	]]
+	
+	self:doInEnv(self.env.love.mousefocus, focus)
+end
+
+-- x, y is from global mouse position
+function projector:_is_mousepos_in_bounds(x, y)
+	return (x >= self.env.love.store.window.x
+		and y >= self.env.love.store.window.y
+		and x <= self.env.love.store.window.x + self.env.love.store.window.width
+		and y <= self.env.love.store.window.y + self.env.love.store.window.height
+	)
+end
+
+function projector:mousemoved(x, y, dx, dy, istouch)
+	if self:_is_mousepos_in_bounds(x, y) then
+		if not self.env.love.window.hasMouseFocus() then
+			self.env.love.store.window.mouseFocus = true
+			self:mousefocus(true)
+		end
+		
+		self.env.love.store.mouse.x = x - self.env.love.store.window.x
+		self.env.love.store.mouse.y = y - self.env.love.store.window.y
+		
+		-- pass to the *emulated game*
+		self:doInEnv(self.env.love.mousemoved, 
+			self.env.love.store.mouse.x, 
+			self.env.love.store.mouse.y, 
+			dx, dy, istouch
+		)
+	else
+		-- the mouse moved away frome our fake window,
+		-- therefore we only care about the last reported position
+		if self.env.love.window.hasMouseFocus() then
+			self.env.love.store.window.mouseFocus = false
+			self:mousefocus(false)
+		end
+	end
+end
+
+function projector:mousepressed(x, y, button, istouch)
+	if self:_is_mousepos_in_bounds(x, y) then
+		-- @TODO: flash focus? issue a mousemoved?
+		self.env.love.store.mouse.buttons[button] = true
+		
+		x = x - self.env.love.store.window.x
+		y = y - self.env.love.store.window.y
+		
+		self:doInEnv(self.env.love.mousepressed, x, y, button, istouch)
+	end
+end
+
+function projector:mousepressed(x, y, button, istouch)
+	if self:_is_mousepos_in_bounds(x, y) then
+		-- @TODO: flash focus? issue a mousemoved?
+		self.env.love.store.mouse.buttons[button] = nil
+		
+		x = x - self.env.love.store.window.x
+		y = y - self.env.love.store.window.y
+		
+		self:doInEnv(self.env.love.mousepressed, x, y, button, istouch)
+	end
 end
 
 return setmetatable({new=new}, {__call=function(_,...) return new(...) end})

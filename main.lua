@@ -81,7 +81,7 @@ function love.draw()
 			imgui.SetNextDock("Right")
 			
 			if imgui.BeginDock("Scene") then
-				nogame.env.love.store.focus = imgui.IsWindowFocused() 
+				nogame.env.love.store.window.focus = imgui.IsWindowFocused() 
 				local x, y = imgui.GetWindowPos()
 				local w, h = imgui.GetWindowSize()
 				
@@ -106,7 +106,7 @@ function love.draw()
 	
 	local mx, my = love.mouse.getPosition()
 	if imgui.Begin(pong.env.love.window.getTitle() .. " | " .. mx .. "\\" .. my .. "###GameWindow") then
-		pong.env.love.store.focus = imgui.IsWindowFocused()
+		pong.env.love.store.window.focus = imgui.IsWindowFocused()
 		local x, y = imgui.GetWindowPos()
 		local w, h = imgui.GetWindowSize()
 		local titleHeight = 19
@@ -160,8 +160,9 @@ function love.keyreleased(key)
 	end
 end
 
-function love.mousemoved(x, y)
+function love.mousemoved(x, y, dx, dy, istouch)
 	imgui.MouseMoved(x, y)
+	pong:mousemoved(x, y, dx, dy, istouch)
 	if not imgui.GetWantCaptureMouse() then
 		
 	end
@@ -179,6 +180,11 @@ function love.mousereleased(x, y, button)
 	if not imgui.GetWantCaptureMouse() then
 		
 	end
+end
+
+function love.mousefocus( focus )
+	-- don't send mousefocus to the game because
+	-- they don't actually receive focus when we do
 end
 
 function love.wheelmoved(x, y)
