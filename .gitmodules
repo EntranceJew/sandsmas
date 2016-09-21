@@ -4,3 +4,6 @@
 [submodule "libs/lume"]
 	path = libs/lume
 	url = https://github.com/rxi/lume
+[submodule "tools/rtfm"]
+	path = tools/rtfm
+	url = https://github.com/airstruck/rtfm
