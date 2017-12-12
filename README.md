@@ -16,7 +16,7 @@ The basic structure is that there is, from least complex to most complex:
 
 ## Lasagna
 Below are some example layer categories and some candidate libraries that would be nice to have in each.
-* **Serialization & Net:** [tiny-ecs](https://github.com/bakpakin/tiny-ecs), [binser](https://github.com/bakpakin/binser), [trickle](https://github.com/bjornbytes/trickle), [hero](https://github.com/airstruck/hero), sock.lua
+* **Serialization & Net:** [tiny-ecs](https://github.com/bakpakin/tiny-ecs), [binser](https://github.com/bakpakin/binser), [trickle](https://github.com/bjornbytes/trickle), [hero](https://github.com/airstruck/hero), [sock.lua](https://github.com/camchenry/sock.lua)
 * **Configuration & Time:** [tick](https://github.com/bjornbytes/tick), [modrun](https://github.com/Asmageddon/modrun), [tactile](https://github.com/tesselode/tactile)
 * **Rendering:** love.physics-visualizer, [chiro](https://github.com/bjornbytes/chiro), [anim8](https://github.com/kikito/anim8), [anim9](https://github.com/excessive/anim9), [Simple Tiled Implementation](https://github.com/karai17/Simple-Tiled-Implementation), [love-imgui](https://github.com/slages/love-imgui), scene.lua, anchor.lua
 * **Assets:** [Autobatch](https://github.com/rxi/autobatch), [cargo](https://github.com/bjornbytes/cargo)
